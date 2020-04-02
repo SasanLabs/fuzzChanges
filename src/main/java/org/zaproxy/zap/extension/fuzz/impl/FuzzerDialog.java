@@ -114,11 +114,11 @@ public class FuzzerDialog<
         fuzzLocationsPanel =
                 new FuzzMessageLocationsPanel(this, fuzzMessagePanel, payloadGeneratorsUIHandlers);
         fuzzMessagePanel.addFocusListener(fuzzLocationsPanel.getFocusListenerAddButtonEnabler());
-        
-        JWTFuzzMessagePanel jwtSettingsUI = new JWTFuzzMessagePanel(Constant.messages.getMessageBundle("fuzz"));
+
+        JWTFuzzMessagePanel jwtSettingsUI =
+                new JWTFuzzMessagePanel(Constant.messages.getMessageBundle("fuzz"));
         fuzzMessagePanel.add(jwtSettingsUI);
-        jwtSettingsUI.addComponent(new RequestSplitComponent<>(), new
-                 ZapXmlConfiguration());
+        jwtSettingsUI.addComponent(new RequestSplitComponent<>(), new ZapXmlConfiguration());
         jwtSettingsUI.setMessage(message);
         optionsPanel =
                 new FuzzerOptionsPanel<>(

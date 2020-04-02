@@ -29,16 +29,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Vector;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
-
 import org.apache.log4j.Logger;
 import org.parosproxy.paros.network.HttpMessage;
 import org.zaproxy.zap.extension.fuzz.impl.PayloadGeneratorsContainer;
@@ -67,6 +68,7 @@ public class JWTFuzzMessagePanel extends SelectMessageLocationsPanel {
 	private JScrollPane settingsScrollPane;
 	private JPanel settingsPanel;
 	private ResourceBundle resourceBundle;
+	private JComboBox<String> headerOrPayload;
 	// private List<org.zaproxy.zap.extension.jwt.ui.CustomFieldFuzzer>
 	// customFieldFuzzers =
 	// JWTConfiguration.getInstance().getCustomFieldFuzzers();
@@ -100,27 +102,24 @@ public class JWTFuzzMessagePanel extends SelectMessageLocationsPanel {
 		init();
 	}
 
-	public void setMessage(Message msg) {
-		super.setMessage(msg);
-
+	public List<String> getJWTTokens() {
 		List<SearchMatch> matches = new ArrayList<>();
-		this.headerSearch(Pattern.compile("[a-zA-Z0-9_-]+[.][a-zA-Z0-9_-]+[.][a-zA-Z0-9_-]+"), matches);
+		List<String> jwtTokens = new ArrayList<>();
+		this.headerSearch(Pattern.compile("[a-zA-Z0-9_-]+[.][a-zA-Z0-9_-]+[.][a-zA-Z0-9_-]+[\\s]"), matches);
 		if (matches.size() == 0) {
 			LOGGER.error("Found no Match");
 		} else {
 			for (SearchMatch sm : matches) {
 				if (sm.getLocation().equals(Location.REQUEST_BODY)) {
-					String body = ((HttpMessage) msg).getRequestBody().toString();
-					LOGGER.error(body.substring(sm.getStart(), sm.getEnd()));
+					String body = ((HttpMessage) this.getMessage()).getRequestBody().toString();
+					jwtTokens.add(body.substring(sm.getStart(), sm.getEnd()));
 				} else {
-					String body = ((HttpMessage) msg).getRequestHeader().toString();
-					LOGGER.error(body.substring(sm.getStart(), sm.getEnd()));
+					String body = ((HttpMessage) this.getMessage()).getRequestHeader().toString();
+					jwtTokens.add(body.substring(sm.getStart(), sm.getEnd()));
 				}
 			}
-
-			LOGGER.error(matches.toString());
 		}
-
+		return jwtTokens;
 	}
 
 	private void init() {
@@ -139,49 +138,74 @@ public class JWTFuzzMessagePanel extends SelectMessageLocationsPanel {
 
 	private void generalSettingsSection(GridBagConstraints gridBagConstraints) {
 
-		gridBagConstraints.gridy++;
+//		gridBagConstraints.gridy++;
+//		gridBagConstraints.gridx = 0;
+//		JLabel lblTargetSelection = new JLabel(
+//				resourceBundle.getString("jwt.settings.general.customFuzz.jwtField.header"));
+//		settingsPanel.add(lblTargetSelection, gridBagConstraints);
+//
+//		gridBagConstraints.gridx++;
+//		JLabel lblFieldName = new JLabel(/* JWTI18n.getMessage */ ("jwt.settings.general.customFuzz.keyField.header"));
+//		settingsPanel.add(lblFieldName, gridBagConstraints);
+//
+//		gridBagConstraints.gridx++;
+//		JLabel lblSignatureRequired = new JLabel(
+//				/* JWTI18n.getMessage */ ("jwt.settings.general.customFuzz.signature.header"));
+//		settingsPanel.add(lblSignatureRequired, gridBagConstraints);
+//
+//		gridBagConstraints.gridx++;
+//		JLabel lblSigningKey = new JLabel(
+//				/* JWTI18n.getMessage */ ("jwt.settings.general.customFuzz.signingKey.header"));
+//		settingsPanel.add(lblSigningKey, gridBagConstraints);
+//
+//		gridBagConstraints.gridx++;
+//		JLabel lblPayload = new JLabel(/* JWTI18n.getMessage */ ("jwt.settings.general.customFuzz.payload.header"));
+//		settingsPanel.add(lblPayload, gridBagConstraints);
+//
+//		gridBagConstraints.gridx++;
+//		JButton addCustomFuzzFields = new JButton(
+//				/* JWTI18n.getMessage */ ("jwt.settings.general.customFuzz.addFuzzFields"));
+//		settingsPanel.add(addCustomFuzzFields, gridBagConstraints);
+//		addCustomFuzzFields.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				Insets insets = new Insets(5, 15, 5, 15);
+//				gridBagConstraints.insets = insets;
+//				// renderCustomFuzzFields(gridBagConstraints, new CustomFieldFuzzer());
+//			}
+//		});
+
 		gridBagConstraints.gridx = 0;
-		JLabel lblTargetSelection = new JLabel(
-				resourceBundle.getString("jwt.settings.general.customFuzz.jwtField.header"));
-		settingsPanel.add(lblTargetSelection, gridBagConstraints);
-
-		gridBagConstraints.gridx++;
-		JLabel lblFieldName = new JLabel(/* JWTI18n.getMessage */ ("jwt.settings.general.customFuzz.keyField.header"));
-		settingsPanel.add(lblFieldName, gridBagConstraints);
-
-		gridBagConstraints.gridx++;
-		JLabel lblSignatureRequired = new JLabel(
-				/* JWTI18n.getMessage */ ("jwt.settings.general.customFuzz.signature.header"));
-		settingsPanel.add(lblSignatureRequired, gridBagConstraints);
-
-		gridBagConstraints.gridx++;
-		JLabel lblSigningKey = new JLabel(
-				/* JWTI18n.getMessage */ ("jwt.settings.general.customFuzz.signingKey.header"));
-		settingsPanel.add(lblSigningKey, gridBagConstraints);
-
-		gridBagConstraints.gridx++;
-		JLabel lblPayload = new JLabel(/* JWTI18n.getMessage */ ("jwt.settings.general.customFuzz.payload.header"));
-		settingsPanel.add(lblPayload, gridBagConstraints);
-
-		gridBagConstraints.gridx++;
-		JButton addCustomFuzzFields = new JButton(
-				/* JWTI18n.getMessage */ ("jwt.settings.general.customFuzz.addFuzzFields"));
-		settingsPanel.add(addCustomFuzzFields, gridBagConstraints);
-		addCustomFuzzFields.addActionListener(new ActionListener() {
-
+		gridBagConstraints.gridy++;
+		headerOrPayload = new JComboBox<String>(new String[]{"--- Select ---"});
+		headerOrPayload.setSelectedIndex(0);
+		headerOrPayload.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Insets insets = new Insets(5, 15, 5, 15);
-				gridBagConstraints.insets = insets;
-				// renderCustomFuzzFields(gridBagConstraints, new CustomFieldFuzzer());
+				if(headerOrPayload.getSelectedIndex() > 0) {
+					gridBagConstraints.gridx = 0;
+					gridBagConstraints.gridy++;
+					//String selectedItem = 
+					//String header = 
+					settingsPanel.add(new JTextArea(headerOrPayload.getSelectedItem().toString()));
+				}
 			}
 		});
-
+		settingsPanel.add(headerOrPayload, gridBagConstraints);
 		// for (CustomFieldFuzzer customFieldFuzzer : this.customFieldFuzzers) {
 		// Insets insets = new Insets(5, 15, 5, 15);
 		// gridBagConstraints.insets = insets;
 		// renderCustomFuzzFields(gridBagConstraints, customFieldFuzzer);
 		// }
+	}
+
+	public void setMessage(Message message) {
+		super.setMessage(message);
+		List<String> jwtTokens = this.getJWTTokens();
+		for (String jwtToken : jwtTokens) {
+			headerOrPayload.addItem(jwtToken);
+		}
 	}
 
 	private void showAddPayloadDialog(Supplier<FileStringPayloadGeneratorUI> getFileStringPayloadGeneratorUISupplier,
